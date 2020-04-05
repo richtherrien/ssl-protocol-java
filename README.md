@@ -46,9 +46,9 @@ Server: DHEncrypt alice = new DHEncrypt();
 
 Step 2: Send Alice's key to Bob and create a new DHEncrypt object using this key.
 
-Server: byte[] aliceKey = alice.getPublicKey();
-Server: aliceKey -> Client
-Client: DHEncrypt bob = new DHEncrypt(aliceKey);
+`Server: byte[] aliceKey = alice.getPublicKey();`
+`Server: aliceKey -> Client`
+`Client: DHEncrypt bob = new DHEncrypt(aliceKey);`
 
 Step 3: Send Bob's key to Alice and perform phase one of the DH protocol.
 
