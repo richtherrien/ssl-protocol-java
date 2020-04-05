@@ -36,78 +36,78 @@ state: ontario
 country code: ca  
 
 ## Key Exchange
-There are currently 2 KeyExchange objects that can be used in our encryption package, DHEncrypt and RSAEncrypt. Usage of these objects is outlined as follows:
+There are currently 2 KeyExchange objects that can be used in our encryption package, DHEncrypt and RSAEncrypt. Usage of these objects is outlined as follows:  
 
-DHEncrypt
+DHEncrypt  
 
-Step 1: Create a DHEncrypt object on either the Server or Client side.
+Step 1: Create a DHEncrypt object on either the Server or Client side.  
 
-Server: DHEncrypt alice = new DHEncrypt();
+Server: DHEncrypt alice = new DHEncrypt();  
 
-Step 2: Send Alice's key to Bob and create a new DHEncrypt object using this key.
+Step 2: Send Alice's key to Bob and create a new DHEncrypt object using this key.  
 
-`Server: byte[] aliceKey = alice.getPublicKey();`
-`Server: aliceKey -> Client`
-`Client: DHEncrypt bob = new DHEncrypt(aliceKey);`
+Server: byte[] aliceKey = alice.getPublicKey();  
+Server: aliceKey -> Client  
+Client: DHEncrypt bob = new DHEncrypt(aliceKey);  
 
-Step 3: Send Bob's key to Alice and perform phase one of the DH protocol.
+Step 3: Send Bob's key to Alice and perform phase one of the DH protocol.  
 
-Client: byte[] bobKey = bob.getPublicKey();
-Client: bobKey -> Server
-Server: alice.phaseOne(bobKey);
+Client: byte[] bobKey = bob.getPublicKey();  
+Client: bobKey -> Server  
+Server: alice.phaseOne(bobKey);  
 
-Once these steps are performed the DH protocol has been completed, you can get a key for use in symmetric encryption objects on either side as follows:
+Once these steps are performed the DH protocol has been completed, you can get a key for use in symmetric encryption objects on either side as follows:  
 
-Example (using AES)
+Example (using AES)  
 
-Server: AESEncrypt aliceEncrypt = new AESEncrypt(alice.getSecret());
-Client: AESEncrypt bobEncrypt = new AESEncrypt(bob.getSecret());
+Server: AESEncrypt aliceEncrypt = new AESEncrypt(alice.getSecret());  
+Client: AESEncrypt bobEncrypt = new AESEncrypt(bob.getSecret());  
 
 RSAEncrypt
 
-Step 1: Create a RSAEncrypt object on both the Client and Server side, and get their public keys.
+Step 1: Create a RSAEncrypt object on both the Client and Server side, and get their public keys.  
 
-Server: RSAEncrypt alice = new RSAEncrypt();
-Server: byte[] aliceKey = alice.getPublicKey();
-Client: RSAEncrypt bob = new RSAEncrypt();
-Client: byte[] bobKey = bob.getPublicKey();
+Server: RSAEncrypt alice = new RSAEncrypt();  
+Server: byte[] aliceKey = alice.getPublicKey();  
+Client: RSAEncrypt bob = new RSAEncrypt();  
+Client: byte[] bobKey = bob.getPublicKey();  
 
-Step 2: Client and Server send their keys to each other
+Step 2: Client and Server send their keys to each other  
 
-Server: aliceKey -> Client
-Client: bobKey -> Server
+Server: aliceKey -> Client  
+Client: bobKey -> Server  
 
-Step 3: Client and Server set the public keys of eachother.
+Step 3: Client and Server set the public keys of eachother.  
 
-Server: alice.setReceiverPublicKey(bobKey);
-Client: bob.setReceiverPublicKey(aliceKey);
+Server: alice.setReceiverPublicKey(bobKey);  
+Client: bob.setReceiverPublicKey(aliceKey);  
 
-Step 4: Client or Server creates a symmetric encryption object and sends the key of that to the other encrypted using the RSA object.
+Step 4: Client or Server creates a symmetric encryption object and sends the key of that to the other encrypted using the RSA object.  
 
-Server: AESEncrypt serverAES = new AESEncrypt();
-Server: byte[] serverKey = alice.encrypt(serverAES.getKey());
-Server: serverKey -> Client
+Server: AESEncrypt serverAES = new AESEncrypt();  
+Server: byte[] serverKey = alice.encrypt(serverAES.getKey());  
+Server: serverKey -> Client  
+ 
+Step 5: Use the received key to instantiate a new symmetric encryption object  
 
-Step 5: Use the received key to instantiate a new symmetric encryption object
+Client: AESEncrypt clientAES = new AESEncrypt(serverKey);  
 
-Client: AESEncrypt clientAES = new AESEncrypt(serverKey);
-
-The RSA key exchange has now been performed.
+The RSA key exchange has now been performed.  
 
 ## Encryption
-There are currently 3 symmetric encryption objects in our encryption package, each with the option to be instantiated using a byte key as follows:
+There are currently 3 symmetric encryption objects in our encryption package, each with the option to be instantiated using a byte key as follows:  
 
-DES
+DES  
 
-DESEncrypt des = new DESEncrypt();
-DESEncrypt des = new DESEncrypt(key);
+DESEncrypt des = new DESEncrypt();  
+DESEncrypt des = new DESEncrypt(key);  
 
-AES
+AES  
 
-AESEncrypt aes = new AESEncrypt();
-AESEncrypt aes = new AESEncrypt(key);
+AESEncrypt aes = new AESEncrypt();  
+AESEncrypt aes = new AESEncrypt(key);  
 
-Triple DES
+Triple DES  
 
-TripleDESEncrypt tripdes = new TripleDESEncrypt();
-TripleDESEncrypt tripdes = new TripleDESEncrypt(key);
+TripleDESEncrypt tripdes = new TripleDESEncrypt();  
+TripleDESEncrypt tripdes = new TripleDESEncrypt(key);  
