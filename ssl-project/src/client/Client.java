@@ -5,10 +5,13 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
+import java.security.cert.X509Certificate;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import project.MessageObject;
-import project.ReadWriteHelper;
+import models.CertificateRequest;
+import models.Message;
+import utils.ReadWriteHelper;
+import utils.X509CertificateManager;
 
 /**
  *
@@ -18,100 +21,57 @@ public class Client {
 
     private static final String SERVER_ADDRESS = "localhost";
     private static final int SERVER_PORT = 5000;
+    private static final String CLIENT_CERT = "certificates/client.cer";
+    private X509Certificate serverCertificate;
+    private CertificateRequest certificateRequest;
 
     public Client() {
     }
 
     public void main() {
+        Message messageObject;
+        ReadWriteHelper rWHelper = new ReadWriteHelper();
+        X509CertificateManager certManager = new X509CertificateManager();
+
         try {
             Socket socket = new Socket(SERVER_ADDRESS, SERVER_PORT);
             System.out.println("Connected to Server");
             DataInputStream in = new DataInputStream(
                     new BufferedInputStream(socket.getInputStream()));
             DataOutputStream out = new DataOutputStream(socket.getOutputStream());
-            // get the byte for the message type
-            //writeMessage(in, out);
 
+            // PHASE 1 not implemented
+            messageObject = rWHelper.readMessage(in);
             // PHASE 2
             boolean serverDone = false;
             while (!serverDone) {
                 // read message from the server
-                ReadWriteHelper rWHelper = new ReadWriteHelper();
-                MessageObject messageObject = rWHelper.readMessage(in);
+                messageObject = rWHelper.readMessage(in);
                 int typeInt = messageObject.getMessageType().ordinal();
                 switch (typeInt) {
-                    case 0:
-                        // hello_request
-                        break;
-                    case 2:
-                        // server_hello
-                        break;
                     case 3:
                         // certificate
-                        break;
-                    case 4:
-                        // server_key_exchange
+                        byte[] certBytes = messageObject.getContent();
+                        this.serverCertificate = certManager.getCertificateFromBytes(certBytes);
+                        System.out.println("Recieved Server Certificate");
                         break;
                     case 5:
                         // certificate_request
+                        this.certificateRequest = (CertificateRequest) rWHelper.deserialize(messageObject.getContent());
+                        System.out.println("CertificateRequest. Type: " + certificateRequest.getCertificateType() + ", Certificate Authorities: " + certificateRequest.getCertificateAuthorities().toString());
                         break;
                     case 6:
                         // server_done 
-                        break;
-                    case 7:
-                        // certificate_verify
-                        break;
-                    case 8:
-                        // client_key_exchange
-                        break;
-                    case 9:
-                        // finished
+                        System.out.println("Phase2 Server Done");
+                        serverDone = true;
                         break;
                     default:
                 }
             }
+            socket.close();
 
         } catch (IOException ex) {
             Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-
-    /*public void writeMessage(DataInputStream in, DataOutputStream out){
-        try {
-            byte type = (byte) MessageObject.Type.client_hello.ordinal();
-            out.write(type);
-            // get the bytes from the content
-            byte[] content = ("Here is a string version").getBytes();
-            // determine the length of the conent
-            int length = content.length;
-            // convert the length to 4 bytes
-            byte[] lengthByte = ByteBuffer.allocate(4).putInt(length).array();
-            // write the content length in bytes
-            out.write(lengthByte);
-            // write the content bytes
-            out.write(content);
-        } catch (IOException ex) {
-            Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
-        }
-    }
-    
-    public MessageObject readMessage(DataInputStream in, DataOutputStream out){
-        try {
-            // read the message type and convert to the enum
-            byte typeByte = in.readByte();
-            MessageObject.Type type = MessageObject.Type.values()[typeByte];
-            // get the length of the content 
-            byte length[] = new byte[4];
-            in.read(length, 0, 4); 
-            int lengthInt =  ByteBuffer.wrap(length).getInt();
-            // set the content array to the byte length and read the values
-            byte content[] = new byte[lengthInt];
-            in.read(content, 0, lengthInt);
-            System.out.println("Type: "+type+", Length: "+ lengthInt+", Content: " + new String(content));
-            return new MessageObject(type, lengthInt, content);
-        } catch (IOException ex) {
-            Logger.getLogger(ServerRunnable.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        return null;
-    }*/
 }
