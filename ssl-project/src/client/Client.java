@@ -1,5 +1,6 @@
 package client;
 
+import hello.ClientHello;
 import java.io.BufferedInputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -25,7 +26,15 @@ public class Client {
             DataInputStream in = new DataInputStream(
                     new BufferedInputStream(socket.getInputStream()));
             DataOutputStream out = new DataOutputStream(socket.getOutputStream());
-
+            
+            // Phase 1
+            ClientHello cHello = new ClientHello(in, out);
+            cHello.init();
+            
+            
+            socket.close();
+            System.out.println("Closed Socket");
+            
         } catch (IOException ex) {
             Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
         }   

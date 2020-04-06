@@ -1,4 +1,5 @@
 package server;
+import hello.ServerHello;
 import java.io.BufferedInputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -24,11 +25,18 @@ public class ServerRunnable implements Runnable {
             DataInputStream in = new DataInputStream(
                     new BufferedInputStream(socket.getInputStream()));
             DataOutputStream out = new DataOutputStream(socket.getOutputStream());
-
+            
+            // Phase 1
+            ServerHello sHello = new ServerHello(in, out);
+            sHello.init();
+            
+            
+            
         } catch (IOException ex) {
             Logger.getLogger(ServerRunnable.class.getName()).log(Level.SEVERE, null, ex);
         } finally {
             try {
+            
             socket.close();
             System.out.println("Closed Socket");
 
