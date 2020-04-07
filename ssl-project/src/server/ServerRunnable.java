@@ -1,5 +1,6 @@
 package server;
 
+import hello.ServerHello;
 import models.handshake.CertificateRequest;
 import models.handshake.MessageType;
 import models.handshake.CertificateType;
@@ -48,13 +49,33 @@ public class ServerRunnable implements Runnable {
                     new BufferedInputStream(socket.getInputStream()));
             DataOutputStream out = new DataOutputStream(socket.getOutputStream());
             ReadWriteHelper rWHelper = new ReadWriteHelper();
+            
             /// PHASE 1
-            Message messageObject = new Message(MessageType.server_hello, null);
-            rWHelper.writeMessage(out, messageObject);
-
+            System.out.println("\nBeginning Phase 1");
+            
+            // create Cipher Suite and 
+            ArrayList<String> keyEx = new ArrayList<>(), cipherAlg = new ArrayList<>(), macAlg = new ArrayList<>();
+            
+            // add Algorithms to Cipher Suite in decreasing order of preferance
+            keyEx.add("RSA");     keyEx.add("DH");
+            cipherAlg.add("DES"); cipherAlg.add("RC4"); cipherAlg.add("RC2"); cipherAlg.add("3DES"); cipherAlg.add("IDEA");
+            macAlg.add("MD5");    macAlg.add("SHA-1");
+            
+            // receive client hello, then send server_hello
+            ServerHello sHello = new ServerHello(in, out, keyEx, cipherAlg, macAlg);
+            sHello.init();
+            
+            // Debugging Information
+            System.out.println("\nSSL Version = " + sHello.getSSLVersion());
+            System.out.println("Nonce Client = " + Arrays.toString(sHello.getRandomFromClient()));
+            System.out.println("\nNonce Server = " + Arrays.toString(sHello.getRandom()));
+            System.out.println("\nKey Exchange Algorithm = " + sHello.getPreferredKeyExchange());
+            System.out.println("Cipher Algorithm = " + sHello.getPreferredCipherAlg());
+            System.out.println("MAC Algorithm = " + sHello.getPreferredMACAlg());
+            
             //// PHASE 2
             // SENDING CERTIFICATE
-            System.out.println("Beginning Phase 2");
+            System.out.println("\nBeginning Phase 2");
             //get path to the file
             Path path = FileSystems.getDefault().getPath(SERVER_CERT);
             String fileLocation = path.toAbsolutePath().toString();
@@ -63,7 +84,7 @@ public class ServerRunnable implements Runnable {
             X509Certificate serverCert = certManager.getCertificateFromFile(fileLocation);
 
             byte[] serverCertBytes = certManager.getEncodedCertificate(serverCert);
-            messageObject = new Message(MessageType.certificate, serverCertBytes);
+            Message messageObject = new Message(MessageType.certificate, serverCertBytes);
             // certificate send
             rWHelper.writeMessage(out, messageObject);
             System.out.println("Sent Client Server-Certificate");
