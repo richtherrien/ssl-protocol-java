@@ -12,7 +12,7 @@ public class Project {
     /**
      * @param args the command line arguments
      */
-    public static void main(String[] args) {
+    public static void main(String[] args){
         if (args[0].equals("client")) {
             Client client = new Client();
             client.main();

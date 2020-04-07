@@ -136,8 +136,8 @@ public class Hello {
         Message messageObject = new Message(messageType, parameters);
         ReadWriteHelper rWHelper = new ReadWriteHelper();
         rWHelper.writeMessage(out, messageObject);
-    }
-    
+            }
+            
     protected String receiveMsgHSProtcol(){
         
         ReadWriteHelper rWHelper = new ReadWriteHelper();
@@ -146,5 +146,5 @@ public class Hello {
         
         return helloByteToString(messageObject.getContent());
         
-    }
-}
+            }
+        }

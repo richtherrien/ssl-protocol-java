@@ -159,7 +159,7 @@ public class ServerRunnable implements Runnable {
             try {
                 socket.close();
                 System.out.println("Closed Socket");
-
+            
             } catch (IOException ex) {
                 Logger.getLogger(ServerRunnable.class.getName()).log(Level.SEVERE, null, ex);
             }
