@@ -1,4 +1,4 @@
-package models;
+package models.handshake;
 
 import java.io.Serializable;
 import java.util.List;
@@ -9,15 +9,6 @@ import java.util.List;
  */
 public class CertificateRequest implements Serializable{
 
-    public enum CertificateType {
-        rsa_signature_only,
-        dss_signature_only,
-        rsa_diffiehellman,
-        dss_diffiehellman,
-        rsa_ephemeral_diffiehellman,
-        dss_ephemeral_diffiehellman,
-        fortezza,
-    }
     private CertificateType certificateType;
     private List<String> certificateAuthorities;
 
