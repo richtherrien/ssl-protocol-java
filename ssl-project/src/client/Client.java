@@ -1,15 +1,21 @@
 package client;
 
+import models.handshake.CertificateRequest;
+import models.handshake.MessageType;
+import models.handshake.CertificateVerify;
+import models.handshake.Message;
+import models.handshake.KeyExchange;
 import java.io.BufferedInputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
+import java.nio.file.FileSystems;
+import java.nio.file.Path;
 import java.security.cert.X509Certificate;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import models.CertificateRequest;
-import models.Message;
+import models.handshake.*;
 import utils.ReadWriteHelper;
 import utils.X509CertificateManager;
 
@@ -40,9 +46,9 @@ public class Client {
                     new BufferedInputStream(socket.getInputStream()));
             DataOutputStream out = new DataOutputStream(socket.getOutputStream());
 
-            // PHASE 1 not implemented
+            //// PHASE 1 not implemented
             messageObject = rWHelper.readMessage(in);
-            // PHASE 2
+            /// PHASE 2
             boolean serverDone = false;
             while (!serverDone) {
                 // read message from the server
@@ -68,8 +74,67 @@ public class Client {
                     default:
                 }
             }
-            socket.close();
 
+            //// PHASE 3 
+            /// Certificate
+            //get cert from the path
+            Path path = FileSystems.getDefault().getPath(CLIENT_CERT);
+            String fileLocation = path.toAbsolutePath().toString();
+            System.out.println("FileLocation: " + fileLocation);
+            X509Certificate serverCert = certManager.getCertificateFromFile(fileLocation);
+            byte[] serverCertBytes = certManager.getEncodedCertificate(serverCert);
+            messageObject = new Message(MessageType.certificate, serverCertBytes);
+            // certificate send
+            rWHelper.writeMessage(out, messageObject);
+            System.out.println("Sent Server Client-Certificate");
+
+            /**
+             * Add the parameters to the client key exchange appropriately
+             * modify the model KeyExchange to have the proper parameters
+             *
+             */
+            KeyExchange keyExchange = new KeyExchange("signature", "parmeters");
+            byte[] keyExchangeBytes = rWHelper.serializeObject(keyExchange);
+            messageObject = new Message(MessageType.client_key_exchange, keyExchangeBytes);
+            rWHelper.writeMessage(out, messageObject);
+            System.out.println("Sent Client Key Exchange");
+
+            /**
+             * Add the parameters to the certificate verify modify the model
+             * CertificateVerify to have the proper parameters
+             *
+             */
+            CertificateVerify certificateVerify = new CertificateVerify("signature");
+            byte[] certificateVerifyBytes = rWHelper.serializeObject(certificateVerify);
+            messageObject = new Message(MessageType.certificate_verify, certificateVerifyBytes);
+            rWHelper.writeMessage(out, messageObject);
+            System.out.println("Sent Certificate Verify");
+
+            //// PHASE 4
+            // Change Cipher Spec sends only a single byte with a value of 1
+            out.write(1);
+
+            /**
+             * Add the parameters to the Finished modify the model Finished to
+             * have the proper parameters
+             */
+            Finished finished = new Finished("signature");
+            byte[] finishedBytes = rWHelper.serializeObject(finished);
+            messageObject = new Message(MessageType.finished, finishedBytes);
+            rWHelper.writeMessage(out, messageObject);
+            System.out.println("Sent Finished");
+
+            // recieve the change cipher spec
+            int changeCipherSpec = in.read();
+            messageObject = rWHelper.readMessage(in);
+            int typeInt = messageObject.getMessageType().ordinal();
+
+            if (typeInt == 9) {
+                Finished clientFinished = (Finished) rWHelper.deserialize(messageObject.getContent());
+                System.out.println("Recieved Finished");
+            }
+
+            socket.close();
         } catch (IOException ex) {
             Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
         }

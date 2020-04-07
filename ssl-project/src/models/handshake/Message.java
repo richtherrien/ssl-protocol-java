@@ -1,4 +1,4 @@
-package models;
+package models.handshake;
 
 import java.io.Serializable;
 
@@ -8,18 +8,6 @@ import java.io.Serializable;
  */
 public class Message implements Serializable {
 
-    public enum MessageType {
-        hello_request,
-        client_hello,
-        server_hello,
-        certificate,
-        server_key_exchange,
-        certificate_request,
-        server_done,
-        certificate_verify,
-        client_key_exchange,
-        finished
-    }
     private MessageType type;
     private int length;
     private byte[] content;

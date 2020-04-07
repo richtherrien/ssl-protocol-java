@@ -1,6 +1,6 @@
 package utils;
 
-import models.Message;
+import models.handshake.*;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
@@ -48,7 +48,7 @@ public class ReadWriteHelper {
         try {
             // read the message type and convert to the enum
             byte typeByte = in.readByte();
-            Message.MessageType messageType = Message.MessageType.values()[typeByte];
+            MessageType messageType = MessageType.values()[typeByte];
             // get the length of the content 
             byte lengthBytes[] = new byte[4];
             in.read(lengthBytes, 0, 4);
