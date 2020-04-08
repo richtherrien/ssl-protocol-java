@@ -6,12 +6,12 @@ import java.io.Serializable;
  *
  * @author Richard
  */
-public class KeyExchange implements Serializable {
+public class ServerKeyExchange implements Serializable {
    // change this parameter from a string to whatever the paramters
     private String parameters;
     private String signature;
 
-    public KeyExchange( String parameters, String signature) {
+    public ServerKeyExchange( String parameters, String signature) {
         this.parameters = parameters;
         this.signature = signature;
     }
