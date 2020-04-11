@@ -1,5 +1,6 @@
 package client;
 
+import hello.ClientHello;
 import models.handshake.CertificateRequest;
 import models.handshake.MessageType;
 import models.handshake.CertificateVerify;
@@ -13,6 +14,8 @@ import java.net.Socket;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import java.security.cert.X509Certificate;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import models.handshake.*;
@@ -47,8 +50,30 @@ public class Client {
             DataOutputStream out = new DataOutputStream(socket.getOutputStream());
 
             //// PHASE 1 not implemented
-            messageObject = rWHelper.readMessage(in);
+            System.out.println("\nBeginning Phase 1");
+            
+            // create Cipher Suite and 
+            ArrayList<String> keyEx = new ArrayList<>(), cipherAlg = new ArrayList<>(), macAlg = new ArrayList<>();
+            
+            // add Algorithms to Cipher Suite in decreasing order of preferance
+            keyEx.add("RSA");     keyEx.add("DH");
+            cipherAlg.add("DES"); cipherAlg.add("RC4"); cipherAlg.add("RC2"); cipherAlg.add("3DES"); cipherAlg.add("IDEA");
+            macAlg.add("MD5");    macAlg.add("SHA-1");
+            
+            // send client hello, then receive server_hello 
+            ClientHello cHello = new ClientHello(in, out, keyEx, cipherAlg, macAlg);
+            cHello.init();
+            
+            //Dubugging information
+            System.out.println("\nSSL Version = " + cHello.getSSLVersion());
+            System.out.println("Nonce Client = " + Arrays.toString(cHello.getRandom()));
+            System.out.println("\nNonce Server = " + Arrays.toString(cHello.getRandomFromServer()));
+            System.out.println("\nKey Exchange Algorithm = " + cHello.getPreferredKeyExchange());
+            System.out.println("Cipher Algorithm = " + cHello.getPreferredCipherAlg());
+            System.out.println("MAC Algorithm = " + cHello.getPreferredMACAlg());
+            
             /// PHASE 2
+            System.out.println("\nBeginning Phase 2");
             boolean serverDone = false;
             while (!serverDone) {
                 // read message from the server
