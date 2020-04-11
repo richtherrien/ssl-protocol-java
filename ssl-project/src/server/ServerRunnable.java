@@ -10,6 +10,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import java.util.logging.Level;
@@ -31,7 +32,7 @@ public class ServerRunnable implements Runnable {
     private static final String SERVER_CERT = "certificates/server.cer";
     private final ArrayList<String> authorities = new ArrayList<>(Arrays.asList("any", "Project Client", "coe817-client", "coe817"));
     private X509Certificate clientCertificate;
-    private KeyExchange clientKeyExchange;
+    private ClientKeyExchange clientKeyExchange;
     private CertificateVerify certificateVerify;
     private Finished clientFinished;
 
@@ -126,8 +127,8 @@ public class ServerRunnable implements Runnable {
                         break;
                     case 8:
                         // client_key_exhcnage
-                        this.clientKeyExchange = (KeyExchange) rWHelper.deserialize(messageObject.getContent());
-                        System.out.println("Client Key Exchange");
+                        this.clientKeyExchange = (ClientKeyExchange) rWHelper.deserialize(messageObject.getContent());
+                        System.out.println("Client Key Exchange. Premaster secret: "+  new String(this.clientKeyExchange.getParameters(), StandardCharsets.UTF_8));
                         break;
                     case 9:
                         // server_done 

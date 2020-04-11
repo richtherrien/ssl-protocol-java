@@ -1,18 +1,21 @@
 package client;
 
 import hello.ClientHello;
+import encryption.RSAEncrypt;
 import models.handshake.CertificateRequest;
 import models.handshake.MessageType;
 import models.handshake.CertificateVerify;
 import models.handshake.Message;
-import models.handshake.KeyExchange;
+import models.handshake.ClientKeyExchange;
 import java.io.BufferedInputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
+import java.security.PublicKey;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -106,8 +109,8 @@ public class Client {
             Path path = FileSystems.getDefault().getPath(CLIENT_CERT);
             String fileLocation = path.toAbsolutePath().toString();
             System.out.println("FileLocation: " + fileLocation);
-            X509Certificate serverCert = certManager.getCertificateFromFile(fileLocation);
-            byte[] serverCertBytes = certManager.getEncodedCertificate(serverCert);
+            X509Certificate clientCert = certManager.getCertificateFromFile(fileLocation);
+            byte[] serverCertBytes = certManager.getEncodedCertificate(clientCert);
             messageObject = new Message(MessageType.certificate, serverCertBytes);
             // certificate send
             rWHelper.writeMessage(out, messageObject);
@@ -118,8 +121,15 @@ public class Client {
              * modify the model KeyExchange to have the proper parameters
              *
              */
-            KeyExchange keyExchange = new KeyExchange("signature", "parmeters");
-            byte[] keyExchangeBytes = rWHelper.serializeObject(keyExchange);
+            RSAEncrypt client = new RSAEncrypt();
+            byte[] serverPublicKey = this.serverCertificate.getPublicKey().getEncoded();
+            client.setReceiverPublicKey(serverPublicKey);
+
+            ClientKeyExchange clientKeyExchange = new ClientKeyExchange();
+            byte[] preMasterSecret = clientKeyExchange.generatePremasterSecret();
+            clientKeyExchange.setParameters(preMasterSecret);
+             System.out.println("Premaster secret: "+ new String(preMasterSecret, StandardCharsets.UTF_8));
+            byte[] keyExchangeBytes = rWHelper.serializeObject(clientKeyExchange);
             messageObject = new Message(MessageType.client_key_exchange, keyExchangeBytes);
             rWHelper.writeMessage(out, messageObject);
             System.out.println("Sent Client Key Exchange");
