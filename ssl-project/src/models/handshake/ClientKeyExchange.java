@@ -30,7 +30,7 @@ public class ClientKeyExchange implements Serializable {
 
     public byte[] generatePremasterSecret() {
         Random random = new Random();
-        byte[] preMasterSecret = new byte[8];
+        byte[] preMasterSecret = new byte[48];
         random.nextBytes(preMasterSecret);
         return preMasterSecret;
     }

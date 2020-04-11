@@ -28,6 +28,7 @@
     <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="aspect.path.notification.shown" value="true" />
+    <property name="last_opened_file_path" value="$USER_HOME$/repos/SpringWorkspace/capstone-spring-boot" />
   </component>
   <component name="SvnConfiguration">
     <configuration />
@@ -40,6 +41,7 @@
       <option name="presentableId" value="Default" />
       <updated>1585325676326</updated>
       <workItem from="1585325678709" duration="1099000" />
+      <workItem from="1586451024418" duration="60000" />
     </task>
     <servers />
   </component>
@@ -51,7 +53,9 @@
       <map>
         <entry key="MAIN">
           <value>
-            <State />
+            <State>
+              <option name="COLUMN_ORDER" />
+            </State>
           </value>
         </entry>
       </map>
@@ -62,9 +66,13 @@
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
     <state x="414" y="178" width="1092" height="775" key="#com.intellij.execution.impl.EditConfigurationsDialog/0.0.1920.1040/1920.0.2560.1400@0.0.1920.1040" timestamp="1585326181935" />
-    <state x="661" y="344" key="com.intellij.ide.util.TipDialog" timestamp="1585325680846">
+    <state x="740" y="275" key="FileChooserDialogImpl" timestamp="1586451048279">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state x="661" y="344" key="com.intellij.ide.util.TipDialog/0.0.1920.1040/1920.0.2560.1400@0.0.1920.1040" timestamp="1585325680846" />
+    <state x="740" y="275" key="FileChooserDialogImpl/0.0.1920.1040/1920.0.2560.1400@0.0.1920.1040" timestamp="1586451048279" />
+    <state x="661" y="344" key="com.intellij.ide.util.TipDialog" timestamp="1586451024409">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state x="661" y="344" key="com.intellij.ide.util.TipDialog/0.0.1920.1040/1920.0.2560.1400@0.0.1920.1040" timestamp="1586451024409" />
   </component>
 </project>
