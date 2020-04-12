@@ -5,6 +5,7 @@ import encryption.DESEncrypt;
 import encryption.Encrypt;
 import encryption.TripleDESEncrypt;
 import AuthenticationCode.SignatureGenVerify;
+import encryption.AESEncrypt;
 import hello.ServerHello;
 import models.handshake.CertificateRequest;
 import models.handshake.MessageType;
@@ -72,10 +73,8 @@ public class ServerRunnable implements Runnable {
             keyEx.add("RSA");
             keyEx.add("DH");
             cipherAlg.add("DES");
-            cipherAlg.add("RC4");
-            cipherAlg.add("RC2");
             cipherAlg.add("3DES");
-            cipherAlg.add("IDEA");
+            cipherAlg.add("AES");
             macAlg.add("MD5");
             macAlg.add("SHA-1");
 
@@ -203,7 +202,7 @@ public class ServerRunnable implements Runnable {
             System.out.println("\nRECORD LAYER");
 
             // begin one way chat
-            chat(in, out, masterSecret);
+            chat(in, out, masterSecret, sHello.getPreferredCipherAlg());
 
         } catch (Exception ex) {
             Logger.getLogger(ServerRunnable.class.getName()).log(Level.SEVERE, null, ex);
@@ -218,17 +217,31 @@ public class ServerRunnable implements Runnable {
         }
     }
 
-    public void chat(DataInputStream in, DataOutputStream out, byte[] masterSecret) {
-
-        DESEncrypt des = new DESEncrypt(masterSecret);
-
+    public void chat(DataInputStream in, DataOutputStream out, byte[] masterSecret, String cipherAlg) {
+       
+        Encrypt ciph = null;
+        
+        switch (cipherAlg) {
+            case "DES":
+                ciph = new DESEncrypt(masterSecret);
+                break;
+            case "3DES":
+                ciph = new TripleDESEncrypt(masterSecret);
+                break;
+            case "AES":
+                ciph = new AESEncrypt(masterSecret);
+                break;
+            default:
+                ciph = new DESEncrypt(masterSecret);
+        }
+        
         while (true) {
             try {
                 ReadWriteRecordLayer rWRecordLayer = new ReadWriteRecordLayer();
                 if (in.available() != 0) {
                     MessageRecordLayer messageRecord = rWRecordLayer.readMessage(in);
-                    System.out.println("Received Message: " + des.decrypt(new String(messageRecord.getContent(), StandardCharsets.UTF_8)));
-                    if (des.decrypt(new String(messageRecord.getContent(), StandardCharsets.UTF_8)).equals("/end")){
+                    System.out.println("Received Message: " + ciph.decrypt(new String(messageRecord.getContent(), StandardCharsets.UTF_8)));
+                    if (ciph.decrypt(new String(messageRecord.getContent(), StandardCharsets.UTF_8)).equals("/end")){
                         break;
                     }
                 }

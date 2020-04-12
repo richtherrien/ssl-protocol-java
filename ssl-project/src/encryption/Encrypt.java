@@ -50,7 +50,17 @@ public abstract class Encrypt {
 
         return decrypt_cipher;
     }
-
+    
+    // overideable method
+    public String encrypt(String str) {
+        return null;
+    }
+    
+    // overideable method
+    public String decrypt(String str) {
+        return null;
+    }
+    
     /**
      * encrypts a plaintext message using a predefined Cipher object
      *

@@ -3,8 +3,11 @@ package client;
 import AuthenticationCode.MAC;
 import encryption.DESEncrypt;
 import AuthenticationCode.SignatureGenVerify;
+import encryption.AESEncrypt;
+import encryption.Encrypt;
 import hello.ClientHello;
 import encryption.RSAEncrypt;
+import encryption.TripleDESEncrypt;
 import models.handshake.CertificateRequest;
 import models.handshake.MessageType;
 import models.handshake.CertificateVerify;
@@ -71,10 +74,8 @@ public class Client {
             keyEx.add("RSA");
             keyEx.add("DH");
             cipherAlg.add("DES");
-            cipherAlg.add("RC4");
-            cipherAlg.add("RC2");
             cipherAlg.add("3DES");
-            cipherAlg.add("IDEA");
+            cipherAlg.add("AES");
             macAlg.add("MD5");
             macAlg.add("SHA-1");
 
@@ -208,7 +209,7 @@ public class Client {
             System.out.println("\nRECORD LAYER");
             System.out.println("Type '/end' to end chat");
             // begin one way chat
-            chat(in, out, masterSecret);
+            chat(in, out, masterSecret, cHello.getPreferredCipherAlg());
 
             socket.close();
         } catch (IOException | InvalidKeySpecException ex) {
@@ -216,15 +217,30 @@ public class Client {
         }
     }
 
-    public void chat(DataInputStream in, DataOutputStream out, byte[] masterSecret) {
-        DESEncrypt des = new DESEncrypt(masterSecret);
+    public void chat(DataInputStream in, DataOutputStream out, byte[] masterSecret, String cipherAlg) {
+        
+        Encrypt ciph = null;
+        
+        switch (cipherAlg) {
+            case "DES":
+                ciph = new DESEncrypt(masterSecret);
+                break;
+            case "3DES":
+                ciph = new TripleDESEncrypt(masterSecret);
+                break;
+            case "AES":
+                ciph = new AESEncrypt(masterSecret);
+                break;
+            default:
+                ciph = new DESEncrypt(masterSecret);
+        }
 
         Scanner input = new Scanner(System.in);
         ReadWriteRecordLayer rWRecordLayer = new ReadWriteRecordLayer();
 
         while (input.hasNextLine()) {
             String message = input.nextLine();
-            rWRecordLayer.writeApplicationBytes(out, des.encrypt(message).getBytes());
+            rWRecordLayer.writeApplicationBytes(out, ciph.encrypt(message).getBytes());
             if (message.equals("/end")){
                 break;
             }

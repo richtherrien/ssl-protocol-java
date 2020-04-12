@@ -97,6 +97,7 @@ public class DESEncrypt extends Encrypt {
      * @param str the plaintext message to be encrypted
      * @return the encrypted message
      */
+    @Override
     public String encrypt(String str) {
         return super.encrypt(str, encrypt_cipher);
     }
@@ -107,6 +108,7 @@ public class DESEncrypt extends Encrypt {
      * @param str DES encrypted message
      * @return the decrypted message
      */
+    @Override
     public String decrypt(String str) {
         return super.decrypt(str, decrypt_cipher);
     }

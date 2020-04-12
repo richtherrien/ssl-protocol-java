@@ -64,6 +64,7 @@ public class RSAEncrypt extends Encrypt {
      * @param str RSA encrypted message to be decrypted
      * @return the decrypted message
      */
+    @Override
     public String decrypt(String str) {
         return super.decrypt(str, decryptionCipher);
     }
@@ -76,6 +77,7 @@ public class RSAEncrypt extends Encrypt {
      * @param str plaintext message to be encrypted
      * @return the encrypted message
      */
+    @Override
     public String encrypt(String str) {
         if (encryptionCipher == null) {
             throw new RuntimeException("Initialize Encryption Cipher using the Receiver's Key before attempting encryption.");
