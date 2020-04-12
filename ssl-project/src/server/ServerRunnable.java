@@ -1,5 +1,9 @@
 package server;
 
+import AuthenticationCode.MAC;
+import encryption.DESEncrypt;
+import encryption.Encrypt;
+import encryption.TripleDESEncrypt;
 import hello.ServerHello;
 import models.handshake.CertificateRequest;
 import models.handshake.MessageType;
@@ -20,6 +24,7 @@ import utils.X509CertificateManager;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Scanner;
 import models.handshake.*;
 import models.recordprotocol.MessageRecordLayer;
 import utils.ReadWriteRecordLayer;
@@ -147,7 +152,9 @@ public class ServerRunnable implements Runnable {
                     default:
                 }
             }
-
+            
+            byte[] masterSecret = MAC.generateMaster(this.clientKeyExchange.getParameters(), sHello.getRandomFromClient(), sHello.getRandom());
+            
             //// PHASE 4
             // Change Cipher Spec sends only a single byte with a value of 1
             out.write(1);
@@ -164,9 +171,10 @@ public class ServerRunnable implements Runnable {
 
             // RECORD LAYER
             System.out.println("\nRECORD LAYER");
-            ReadWriteRecordLayer rWRecordLayer = new ReadWriteRecordLayer();
-            MessageRecordLayer messageRecord = rWRecordLayer.readMessage(in);
-            System.out.println("Received Message: " + new String(messageRecord.getContent(), StandardCharsets.UTF_8));
+            
+            // begin one way chat
+            chat(in, out, masterSecret);
+
         } catch (IOException ex) {
             Logger.getLogger(ServerRunnable.class.getName()).log(Level.SEVERE, null, ex);
         } finally {
@@ -179,4 +187,23 @@ public class ServerRunnable implements Runnable {
             }
         }
     }
+    
+    public void chat(DataInputStream in, DataOutputStream out, byte[] masterSecret){
+        
+        DESEncrypt des = new DESEncrypt(masterSecret);
+        
+        while(true){
+            try {
+                ReadWriteRecordLayer rWRecordLayer = new ReadWriteRecordLayer();
+                if(in.available() != 0){
+                    MessageRecordLayer messageRecord = rWRecordLayer.readMessage(in);
+                    System.out.println("Received Message: " + des.decrypt(new String(messageRecord.getContent(), StandardCharsets.UTF_8)));
+                }
+            } catch (IOException ex) {
+                Logger.getLogger(ServerRunnable.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+    }
+
+    
 }
