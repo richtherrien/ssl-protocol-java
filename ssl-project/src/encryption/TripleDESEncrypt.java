@@ -10,17 +10,17 @@ import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.DESedeKeySpec;
 
 public class TripleDESEncrypt extends Encrypt {
+
     private Cipher encrypt_cipher;
     private Cipher decrypt_cipher;
     private SecretKey key;
     private int keyLength = 24;
-    
-    
+
     public TripleDESEncrypt() {
         createKey();
         createCipher();
     }
-    
+
     public TripleDESEncrypt(byte[] user_key) {
         if (user_key.length > keyLength) {
             user_key = super.fixLength(user_key, keyLength);
@@ -28,18 +28,19 @@ public class TripleDESEncrypt extends Encrypt {
         createKey(user_key);
         createCipher();
     }
-    
+
     protected void createKey() {
         try {
             // DESede is the name for 3DES
-            key = KeyGenerator.getInstance("DESede").generateKey(); 
+            key = KeyGenerator.getInstance("DESede").generateKey();
         } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
         }
     }
-    
-     /**
+
+    /**
      * instantiates key object with user provided key
+     *
      * @param user_key
      */
     protected void createKey(byte[] user_key) {
@@ -56,14 +57,15 @@ public class TripleDESEncrypt extends Encrypt {
             e.printStackTrace();
         }
     }
-    
-    protected void createCipher() { 
+
+    protected void createCipher() {
         encrypt_cipher = super.createEncryptCipher(key, "DESede");
         decrypt_cipher = super.createDecryptCipher(key, "DESede");
     }
-    
+
     /**
      * encrypts a plaintext message using a predefined Cipher object
+     *
      * @param str the plaintext message to be encrypted
      * @return the encrypted message
      */
@@ -73,6 +75,7 @@ public class TripleDESEncrypt extends Encrypt {
 
     /**
      * decrypts an encrypted message using a predefined Cipher object
+     *
      * @param str DES encrypted message
      * @return the decrypted message
      */
@@ -82,11 +85,12 @@ public class TripleDESEncrypt extends Encrypt {
 
     /**
      * returns the key of the DESEncrypt object
+     *
      * @return the key of the DESEncrypt object
      */
-    public byte[] getKey () {
+    public byte[] getKey() {
         byte[] rawDesEdeKey = null;
-        
+
         try {
             SecretKeyFactory desEdeFactory = SecretKeyFactory.getInstance("DESede");
             DESedeKeySpec desEdeSpec = (DESedeKeySpec) desEdeFactory.getKeySpec(key, javax.crypto.spec.DESedeKeySpec.class);
@@ -94,7 +98,7 @@ public class TripleDESEncrypt extends Encrypt {
         } catch (InvalidKeySpecException | NoSuchAlgorithmException e) {
             e.printStackTrace();
         }
-        
+
         return rawDesEdeKey;
     }
 }

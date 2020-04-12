@@ -173,16 +173,16 @@ public class ServerRunnable implements Runnable {
                         done = true;
                         sig = new SignatureGenVerify();
                         handShakeMessagesBytes = rWHelper.serializeObject(handShakeMessages);
-                        
+
                         verify = sig.verifySignature(this.clientCertificate.getPublicKey(), handShakeMessagesBytes, this.clientFinished.getHashValue());
                         System.out.println("Checking hash SERVER_PRIV:  " + verify);
                         break;
                     default:
                 }
             }
-            
+
             byte[] masterSecret = MAC.generateMaster(this.clientKeyExchange.getParameters(), sHello.getRandomFromClient(), sHello.getRandom());
-            
+
             //// PHASE 4
             // Change Cipher Spec sends only a single byte with a value of 1
             out.writeByte(1);
@@ -201,7 +201,7 @@ public class ServerRunnable implements Runnable {
 
             // RECORD LAYER
             System.out.println("\nRECORD LAYER");
-            
+
             // begin one way chat
             chat(in, out, masterSecret);
 
@@ -217,15 +217,15 @@ public class ServerRunnable implements Runnable {
             }
         }
     }
-    
-    public void chat(DataInputStream in, DataOutputStream out, byte[] masterSecret){
-        
+
+    public void chat(DataInputStream in, DataOutputStream out, byte[] masterSecret) {
+
         DESEncrypt des = new DESEncrypt(masterSecret);
-        
-        while(true){
+
+        while (true) {
             try {
                 ReadWriteRecordLayer rWRecordLayer = new ReadWriteRecordLayer();
-                if(in.available() != 0){
+                if (in.available() != 0) {
                     MessageRecordLayer messageRecord = rWRecordLayer.readMessage(in);
                     System.out.println("Received Message: " + des.decrypt(new String(messageRecord.getContent(), StandardCharsets.UTF_8)));
                 }
@@ -235,5 +235,4 @@ public class ServerRunnable implements Runnable {
         }
     }
 
-    
 }

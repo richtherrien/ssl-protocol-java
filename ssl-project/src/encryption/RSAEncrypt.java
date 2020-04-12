@@ -8,6 +8,7 @@ import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;
 
 public class RSAEncrypt extends Encrypt {
+
     private Cipher signingCipher;
     private Cipher encryptionCipher;
     private Cipher decryptionCipher;
@@ -46,38 +47,45 @@ public class RSAEncrypt extends Encrypt {
     }
 
     /**
-     * encrypts a plaintext message using a predefined Cipher object instantiated with the private key
+     * encrypts a plaintext message using a predefined Cipher object
+     * instantiated with the private key
+     *
      * @param str the plaintext message to be encrypted
      * @return the encrypted message
      */
-    public String signMessage(String str) { return super.encrypt(str, signingCipher); }
+    public String signMessage(String str) {
+        return super.encrypt(str, signingCipher);
+    }
 
     /**
-     * decrypts an encrypted message using a predefined Cipher object instantiated with the private key
+     * decrypts an encrypted message using a predefined Cipher object
+     * instantiated with the private key
+     *
      * @param str RSA encrypted message to be decrypted
      * @return the decrypted message
      */
     public String decrypt(String str) {
         return super.decrypt(str, decryptionCipher);
     }
-    
+
     /**
      * encrypts a message using a cipher created from someone else's public key,
-     * requires instantiation of encryptionCipher through setEncryptKey before 
+     * requires instantiation of encryptionCipher through setEncryptKey before
      * use
+     *
      * @param str plaintext message to be encrypted
      * @return the encrypted message
      */
-    public String encrypt (String str) {
+    public String encrypt(String str) {
         if (encryptionCipher == null) {
             throw new RuntimeException("Initialize Encryption Cipher using the Receiver's Key before attempting encryption.");
         }
         return super.encrypt(str, encryptionCipher);
     }
 
-    public void setReceiverPublicKey (byte [] enc_key) {
+    public void setReceiverPublicKey(byte[] enc_key) {
         EncodedKeySpec encodedKeySpec = new X509EncodedKeySpec(enc_key);
-        
+
         try {
             KeyFactory keyFactory = KeyFactory.getInstance("RSA");
             PublicKey pubkey = keyFactory.generatePublic(encodedKeySpec);
@@ -86,9 +94,10 @@ public class RSAEncrypt extends Encrypt {
             e.printStackTrace();
         }
     }
-    
+
     /**
      * gets the public key of the RSAEncrypt object
+     *
      * @return the public key of the RSAEncrypt object
      */
     public byte[] getPublicKey() {

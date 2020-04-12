@@ -1,12 +1,8 @@
 package client;
 
-<<<<<<< HEAD
 import AuthenticationCode.MAC;
-import AuthenticationCode.MD5;
 import encryption.DESEncrypt;
-=======
 import AuthenticationCode.SignatureGenVerify;
->>>>>>> dev-27: added .pem files for server and client, added the signature for files
 import hello.ClientHello;
 import encryption.RSAEncrypt;
 import models.handshake.CertificateRequest;
@@ -31,7 +27,6 @@ import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import models.handshake.*;
-import models.recordprotocol.MessageRecordLayer;
 import utils.ReadWriteHelper;
 import utils.ReadWriteRecordLayer;
 import utils.ServerClientKeys;
@@ -162,9 +157,9 @@ public class Client {
             messageObject = new Message(MessageType.client_key_exchange, keyExchangeBytes);
             rWHelper.writeMessage(out, messageObject);
             System.out.println("Sent Client Key Exchange");
-            
+
             byte[] masterSecret = MAC.generateMaster(preMasterSecret, cHello.getRandom(), cHello.getRandomFromServer());
-            
+
             //set handshake message
             handShakeMessages.setClientKeyExchange(messageObject);
 
@@ -211,28 +206,26 @@ public class Client {
 
             // RECORD LAYER
             System.out.println("\nRECORD LAYER");
-          
+
             // begin one way chat
             chat(in, out, masterSecret);
-            
-            
-        
+
             socket.close();
         } catch (IOException | InvalidKeySpecException ex) {
             Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-    
-    public void chat(DataInputStream in, DataOutputStream out, byte[] masterSecret){
+
+    public void chat(DataInputStream in, DataOutputStream out, byte[] masterSecret) {
         DESEncrypt des = new DESEncrypt(masterSecret);
-        
+
         Scanner input = new Scanner(System.in);
         ReadWriteRecordLayer rWRecordLayer = new ReadWriteRecordLayer();
-                    
-        while(input.hasNextLine()){
+
+        while (input.hasNextLine()) {
             String message = input.nextLine();
             rWRecordLayer.writeApplicationBytes(out, des.encrypt(message).getBytes());
         }
     }
-    
+
 }

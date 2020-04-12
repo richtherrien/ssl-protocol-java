@@ -1,6 +1,5 @@
 package encryption;
 
-
 import javax.crypto.*;
 import javax.crypto.spec.DESKeySpec;
 import java.security.InvalidKeyException;
@@ -8,6 +7,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 
 public class DESEncrypt extends Encrypt {
+
     private Cipher encrypt_cipher;
     private Cipher decrypt_cipher;
     private SecretKey key;
@@ -23,13 +23,14 @@ public class DESEncrypt extends Encrypt {
 
     /**
      * constructor used to create DESEncrypt object with user provided key
+     *
      * @param user_key user provided key for DES encryption
      */
     public DESEncrypt(byte[] user_key) {
         if (user_key.length > keyLength) {
             user_key = super.fixLength(user_key, keyLength);
         }
-        
+
         createKey(user_key);
         createCipher();
     }
@@ -64,6 +65,7 @@ public class DESEncrypt extends Encrypt {
 
     /**
      * instantiates key object with user provided key
+     *
      * @param user_key
      */
     protected void createKey(byte[] user_key) {
@@ -91,6 +93,7 @@ public class DESEncrypt extends Encrypt {
 
     /**
      * encrypts a plaintext message using a predefined Cipher object
+     *
      * @param str the plaintext message to be encrypted
      * @return the encrypted message
      */
@@ -100,6 +103,7 @@ public class DESEncrypt extends Encrypt {
 
     /**
      * decrypts an encrypted message using a predefined Cipher object
+     *
      * @param str DES encrypted message
      * @return the decrypted message
      */
@@ -109,11 +113,12 @@ public class DESEncrypt extends Encrypt {
 
     /**
      * returns the key of the DESEncrypt object
+     *
      * @return the key of the DESEncrypt object
      */
-    public byte[] getKey () {
+    public byte[] getKey() {
         byte[] rawDesKey = null;
-        
+
         try {
             SecretKeyFactory desFactory = SecretKeyFactory.getInstance("DES");
             DESKeySpec desSpec = (DESKeySpec) desFactory.getKeySpec(key, javax.crypto.spec.DESKeySpec.class);
@@ -121,7 +126,7 @@ public class DESEncrypt extends Encrypt {
         } catch (InvalidKeySpecException | NoSuchAlgorithmException e) {
             e.printStackTrace();
         }
-        
+
         return rawDesKey;
     }
 }
