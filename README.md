@@ -13,17 +13,32 @@ To generate the public certificates the `keytool` utility is used.
 This followed the guide from the [oracle docs](https://docs.oracle.com/cd/E19830-01/819-4712/ablqw/index.html)  
 
 Step 1: Generate the certificate in the keystore  
-`keytool -genkey -alias serverKey -keyalg RSA -keypass keyPasswordServer -storepass storePasswordSecret -keystore keystore.jks -validity 360 -keysize 2048 -dname "CN=Project Server, OU=coe817-server, O=coe817, L=toronto,
-S=ontario, C=ca"`
+`keytool -genkey -alias serverKey -keyalg RSA -keypass keyPasswordServer -storepass storePasswordSecret -keystore keystore.jks -validity 360 -keysize 2048 -dname "CN=Project Server,OU=coe817-server,O=coe817,L=toronto,S=ontario,C=ca"`
 
-Step 2: Export the certificate to a .cer file  
+Step 2: Export the certificate to a .cer file   
 `keytool -export -alias serverKey -storepass storePasswordSecret -file server.cer -keystore keystore.jks`  
 
-Step 3: Follow the same steps for the client certificate  
-`keytool -genkey -alias clientKey -keyalg RSA -keypass keyPasswordClient -storepass storePasswordSecret -keystore keystore.jks -validity 360 -keysize 2048 -dname "CN=Project Client, OU=coe817-client, O=coe817, L=toronto, S=ontario, C=ca"`  
+Step 3: Repeat Steps 1 & 2 for the client  
+`keytool -genkey -alias clientKey -keyalg RSA -keypass keyPasswordClient -storepass storePasswordSecret -keystore keystore.jks -validity 360 -keysize 2048 -dname "CN=Project Client,OU=coe817-client,O=coe817,L=toronto,S=ontario,C=ca"`  
 
-Step 4: Export the certificate to a .cer file  
 `keytool -export -alias clientKey -storepass storePasswordSecret -file client.cer -keystore keystore.jks`  
+
+Step 4: Getting private keys; convert JKS to PKCS12 format  
+`keytool -importkeystore -srckeystore keystore.jks -srcstorepass storePasswordSecret -srckeypass keyPasswordServer -srcalias serverKey -destalias serverKey -destkeystore keystoreServer.p12 -deststoretype PKCS12 -deststorepass password -destkeypass password`
+
+Step 5: Export the private key; winpty is only required on WINDOWS 10 machines  
+`winpty openssl pkcs12 -in keystoreServer.p12 -nodes -nocerts -out server_private_key.pem`  
+Enter Password: password  
+
+Step 6: Repeat Steps 4 & 5 for the client  
+`keytool -importkeystore -srckeystore keystore.jks -srcstorepass storePasswordSecret -srckeypass keyPasswordClient -srcalias clientKey -destalias clientKey -destkeystore keystoreClient.p12 -deststoretype PKCS12 -deststorepass password -destkeypass password`
+
+`winpty openssl pkcs12 -in keystoreClient.p12 -nodes -nocerts -out client_private_key.pem`  
+Enter Password: password  
+
+Step 7: Convert to der format  
+`winpty openssl pkcs8 -topk8 -inform PEM -outform DER -in server_private_key.pem -out server_private_key.der -nocrypt`  
+`winpty openssl pkcs8 -topk8 -inform PEM -outform DER -in client_private_key.pem -out client_private_key.der -nocrypt`  
 
 
 ## Key Exchange

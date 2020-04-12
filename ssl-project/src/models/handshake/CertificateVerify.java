@@ -7,17 +7,17 @@ import java.io.Serializable;
  * @author Richard
  */
 public class CertificateVerify implements Serializable {
-    private String signature;
+    private byte[] signature;
 
-    public CertificateVerify(String signature) {
+    public CertificateVerify(byte[] signature) {
         this.signature = signature;
     }
 
-    public String getSignature() {
+    public byte[] getSignature() {
         return this.signature;
     }
 
-    public void setSignature(String signature) {
+    public void setSignature(byte[] signature) {
         this.signature = signature;
     }
 }

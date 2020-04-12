@@ -4,6 +4,7 @@ import AuthenticationCode.MAC;
 import encryption.DESEncrypt;
 import encryption.Encrypt;
 import encryption.TripleDESEncrypt;
+import AuthenticationCode.SignatureGenVerify;
 import hello.ServerHello;
 import models.handshake.CertificateRequest;
 import models.handshake.MessageType;
@@ -17,6 +18,7 @@ import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
+import java.security.PrivateKey;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import utils.ReadWriteHelper;
@@ -28,6 +30,7 @@ import java.util.Scanner;
 import models.handshake.*;
 import models.recordprotocol.MessageRecordLayer;
 import utils.ReadWriteRecordLayer;
+import utils.ServerClientKeys;
 
 /**
  *
@@ -57,6 +60,7 @@ public class ServerRunnable implements Runnable {
                     new BufferedInputStream(socket.getInputStream()));
             DataOutputStream out = new DataOutputStream(socket.getOutputStream());
             ReadWriteHelper rWHelper = new ReadWriteHelper();
+            HandShakeMessages handShakeMessages = new HandShakeMessages();
 
             /// PHASE 1
             System.out.println("\nBeginning Phase 1");
@@ -99,6 +103,8 @@ public class ServerRunnable implements Runnable {
 
             byte[] serverCertBytes = certManager.getEncodedCertificate(serverCert);
             Message messageObject = new Message(MessageType.certificate, serverCertBytes);
+            // set handshakemessage
+            handShakeMessages.setServerCertificate(messageObject);
             // certificate send
             rWHelper.writeMessage(out, messageObject);
             System.out.println("Sent Client Server-Certificate");
@@ -110,14 +116,18 @@ public class ServerRunnable implements Runnable {
             messageObject = new Message(MessageType.certificate_request, certificateRequestBytes);
             rWHelper.writeMessage(out, messageObject);
             System.out.println("Sent Client Certificate Request");
-
+            // set handshakemessage
+            handShakeMessages.setCertificateRequest(messageObject);
             // SENDING SERVER HELLO DONE
             // send server done message
             messageObject = new Message(MessageType.server_done, null);
             rWHelper.writeMessage(out, messageObject);
             System.out.println("Sent Client Server Done");
-
+            // set handshakemessage
+            handShakeMessages.setServerHelloDone(messageObject);
             /// PHASE 3 
+            System.out.println("\nBeginning Phase 3");
+
             boolean done = false;
             while (!done) {
                 // read message from the server
@@ -128,42 +138,62 @@ public class ServerRunnable implements Runnable {
                         // certificate
                         byte[] certBytes = messageObject.getContent();
                         this.clientCertificate = certManager.getCertificateFromBytes(certBytes);
-                        System.out.println("Recieved Client Certificate");
+                        System.out.println("Received Client Certificate");
+                        // set handshakemessage
+                        handShakeMessages.setClientCertificate(messageObject);
                         break;
                     case 7:
                         // certificate verifiy
                         this.certificateVerify = (CertificateVerify) rWHelper.deserialize(messageObject.getContent());
                         System.out.println("Certificate Verifiy");
+                        //verifiy certificate
+                        SignatureGenVerify sig = new SignatureGenVerify();
+                        byte[] handShakeMessagesBytes = rWHelper.serializeObject(handShakeMessages);
 
+                        boolean verify = sig.verifySignature(this.clientCertificate.getPublicKey(), handShakeMessagesBytes, certificateVerify.getSignature());
+                        System.out.println("Checking signature validity:  " + verify);
+
+                        // set handshakemessage
+                        handShakeMessages.setCertificateVerify(messageObject);
                         // after certificate verify comes change cipher spec so read the 1 byte
-                        int changeCipherSpec = in.read();
+                        byte changeCipherSpec = in.readByte();
                         break;
                     case 8:
                         // client_key_exhcnage
+                        System.out.println("\nBeginning Phase 4");
                         this.clientKeyExchange = (ClientKeyExchange) rWHelper.deserialize(messageObject.getContent());
                         System.out.println("Client Key Exchange. Premaster secret: " + new String(this.clientKeyExchange.getParameters(), StandardCharsets.UTF_8));
+                        // set handshakemessage
+                        handShakeMessages.setClientKeyExchange(messageObject);
                         break;
                     case 9:
                         // server_done 
                         this.clientFinished = (Finished) rWHelper.deserialize(messageObject.getContent());
                         System.out.println("Recieved Finished");
                         done = true;
+                        sig = new SignatureGenVerify();
+                        handShakeMessagesBytes = rWHelper.serializeObject(handShakeMessages);
+
+                        verify = sig.verifySignature(this.clientCertificate.getPublicKey(), handShakeMessagesBytes, this.clientFinished.getHashValue());
+                        System.out.println("Checking hash SERVER_PRIV:  " + verify);
                         break;
                     default:
                 }
             }
-            
+
             byte[] masterSecret = MAC.generateMaster(this.clientKeyExchange.getParameters(), sHello.getRandomFromClient(), sHello.getRandom());
-            
+
             //// PHASE 4
             // Change Cipher Spec sends only a single byte with a value of 1
-            out.write(1);
+            out.writeByte(1);
 
-            /**
-             * Add the parameters to the Finished modify the model Finished to
-             * have the proper parameters
-             */
-            Finished finished = new Finished("signature");
+            byte[] handShakeMessagesBytes = rWHelper.serializeObject(handShakeMessages);
+            SignatureGenVerify sig = new SignatureGenVerify();
+            ServerClientKeys serverClientKeys = new ServerClientKeys();
+            PrivateKey keyOfCertificate = serverClientKeys.getServerPrivateKey();
+            byte[] hash = sig.signContent(keyOfCertificate, handShakeMessagesBytes);
+
+            Finished finished = new Finished(hash);
             byte[] finishedBytes = rWHelper.serializeObject(finished);
             messageObject = new Message(MessageType.finished, finishedBytes);
             rWHelper.writeMessage(out, messageObject);
@@ -171,11 +201,11 @@ public class ServerRunnable implements Runnable {
 
             // RECORD LAYER
             System.out.println("\nRECORD LAYER");
-            
+
             // begin one way chat
             chat(in, out, masterSecret);
 
-        } catch (IOException ex) {
+        } catch (Exception ex) {
             Logger.getLogger(ServerRunnable.class.getName()).log(Level.SEVERE, null, ex);
         } finally {
             try {
@@ -187,15 +217,15 @@ public class ServerRunnable implements Runnable {
             }
         }
     }
-    
-    public void chat(DataInputStream in, DataOutputStream out, byte[] masterSecret){
-        
+
+    public void chat(DataInputStream in, DataOutputStream out, byte[] masterSecret) {
+
         DESEncrypt des = new DESEncrypt(masterSecret);
-        
-        while(true){
+
+        while (true) {
             try {
                 ReadWriteRecordLayer rWRecordLayer = new ReadWriteRecordLayer();
-                if(in.available() != 0){
+                if (in.available() != 0) {
                     MessageRecordLayer messageRecord = rWRecordLayer.readMessage(in);
                     System.out.println("Received Message: " + des.decrypt(new String(messageRecord.getContent(), StandardCharsets.UTF_8)));
                 }
@@ -205,5 +235,4 @@ public class ServerRunnable implements Runnable {
         }
     }
 
-    
 }

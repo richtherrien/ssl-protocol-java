@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package AuthenticationCode;
 
 import java.security.InvalidKeyException;
@@ -17,7 +12,8 @@ import javax.crypto.Mac;
  * @author Roman Makuch
  */
 public class SHA {
-     protected byte[] SHA(Key key, String msg) {  
+
+    protected byte[] SHA(Key key, String msg) {
         Mac mac = null;
         try {
             //Creating MAC
@@ -27,13 +23,13 @@ public class SHA {
         } catch (NoSuchAlgorithmException | InvalidKeyException ex) {
             Logger.getLogger(SHA.class.getName()).log(Level.SEVERE, null, ex);
         }
-        
+
         //Computing the Mac
-        byte[] bytes = msg.getBytes();      
+        byte[] bytes = msg.getBytes();
         byte[] macResult = mac.doFinal(bytes);
         System.out.println("Mac result:");
         System.out.println(new String(macResult));
-        
+
         return macResult;
     }
 }

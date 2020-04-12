@@ -12,7 +12,9 @@ import java.util.Base64;
 import java.util.Arrays;
 
 public abstract class Encrypt {
+
     abstract void createCipher();
+
     abstract void createKey();
 
     protected Cipher createEncryptCipher(Key key, String transformation) {
@@ -51,6 +53,7 @@ public abstract class Encrypt {
 
     /**
      * encrypts a plaintext message using a predefined Cipher object
+     *
      * @param str the plaintext message to be encrypted
      * @return the encrypted message
      */
@@ -74,6 +77,7 @@ public abstract class Encrypt {
 
     /**
      * decrypts an encrypted message using a predefined Cipher object
+     *
      * @param str DES encrypted message
      * @return the decrypted message
      */
@@ -92,8 +96,8 @@ public abstract class Encrypt {
 
         return decrypted_message;
     }
-    
-    protected byte[] fixLength (byte[] key, int length) {
+
+    protected byte[] fixLength(byte[] key, int length) {
         return Arrays.copyOfRange(key, 0, length);
     }
 }
