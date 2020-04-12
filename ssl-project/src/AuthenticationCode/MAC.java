@@ -1,4 +1,3 @@
-
 package AuthenticationCode;
 
 import java.security.InvalidKeyException;
