@@ -1,5 +1,8 @@
 package client;
 
+import AuthenticationCode.MAC;
+import AuthenticationCode.MD5;
+import encryption.DESEncrypt;
 import hello.ClientHello;
 import encryption.RSAEncrypt;
 import models.handshake.CertificateRequest;
@@ -18,9 +21,11 @@ import java.nio.file.Path;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import models.handshake.*;
+import models.recordprotocol.MessageRecordLayer;
 import utils.ReadWriteHelper;
 import utils.ReadWriteRecordLayer;
 import utils.X509CertificateManager;
@@ -139,7 +144,9 @@ public class Client {
             messageObject = new Message(MessageType.client_key_exchange, keyExchangeBytes);
             rWHelper.writeMessage(out, messageObject);
             System.out.println("Sent Client Key Exchange");
-
+            
+            byte[] masterSecret = MAC.generateMaster(preMasterSecret, cHello.getRandom(), cHello.getRandomFromServer());
+            
             /**
              * Add the parameters to the certificate verify modify the model
              * CertificateVerify to have the proper parameters
@@ -177,15 +184,28 @@ public class Client {
 
             // RECORD LAYER
             System.out.println("\nRECORD LAYER");
-            ReadWriteRecordLayer rWRecordLayer = new ReadWriteRecordLayer();
-            String mData = "Here is some application data";
-            System.out.println("Write Message: " + mData);
-
-            rWRecordLayer.writeApplicationBytes(out, mData.getBytes());
-
+          
+            // begin one way chat
+            chat(in, out, masterSecret);
+            
+            
+        
             socket.close();
         } catch (IOException ex) {
             Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
+    
+    public void chat(DataInputStream in, DataOutputStream out, byte[] masterSecret){
+        DESEncrypt des = new DESEncrypt(masterSecret);
+        
+        Scanner input = new Scanner(System.in);
+        ReadWriteRecordLayer rWRecordLayer = new ReadWriteRecordLayer();
+                    
+        while(input.hasNextLine()){
+            String message = input.nextLine();
+            rWRecordLayer.writeApplicationBytes(out, des.encrypt(message).getBytes());
+        }
+    }
+    
 }
