@@ -1,6 +1,5 @@
 package models.recordprotocol;
 
-import models.handshake.*;
 import java.io.Serializable;
 import java.nio.ByteBuffer;
 
@@ -22,15 +21,15 @@ public class MessageRecordLayer implements Serializable {
 
     public MessageRecordLayer(ContentType contentType, byte[] content) {
         this.contentType = (byte) contentType.ordinal();
-        this.content = content;
+        this.content = addMacAndEncrypt(content);
     }
 
     public void setContentType(ContentType contentType) {
         this.contentType = (byte) contentType.ordinal();
     }
 
-    public MessageType getContentType() {
-        return MessageType.values()[this.contentType];
+    public ContentType getContentType() {
+        return ContentType.values()[this.contentType];
     }
 
     public byte getContentTypeByte() {
@@ -43,7 +42,7 @@ public class MessageRecordLayer implements Serializable {
         buffer.putShort((short) this.content.length);
         return buffer.array();
     }
-    
+
     public short getLengthShort() {
         return (short) this.content.length;
     }
@@ -53,14 +52,19 @@ public class MessageRecordLayer implements Serializable {
     }
 
     public void setContent(byte[] content) {
-        this.content = content;
+        this.content = addMacAndEncrypt(content);
     }
 
     public byte getMajorVersion() {
         return this.majorVersion;
     }
-    
+
     public byte getMinorVersion() {
         return this.minorVersion;
+    }
+
+    // add MAC and encrypt the content
+    public byte[] addMacAndEncrypt(byte[] content) {
+        return content;
     }
 }

@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import models.recordprotocol.ContentType;
@@ -20,8 +21,29 @@ import models.recordprotocol.MessageRecordLayer;
  */
 public class ReadWriteRecordLayer {
 
+    public void writeApplicationBytes(DataOutputStream out, byte[] applicationContent) {
+        int maxFragmentLength = 16384;
+        // check length of application content
+        // if greater than 16384 bytes then crate new fragment
+        int contentLength = applicationContent.length;
+        if (contentLength <= maxFragmentLength) {
+            MessageRecordLayer messageObject = new MessageRecordLayer(ContentType.application_data, applicationContent);
+            writeMessage(out, messageObject);
+            return;
+        }
+
+        double numberOfFragments = (double) contentLength / (double) maxFragmentLength;
+        for (int i = 0; i < numberOfFragments; i++) {
+            int offset = maxFragmentLength * i;
+            byte[] fragmentContent = Arrays.copyOfRange(applicationContent, offset, maxFragmentLength);
+
+            MessageRecordLayer messageObject = new MessageRecordLayer(ContentType.application_data, fragmentContent);
+            writeMessage(out, messageObject);
+        }
+    }
+
     // write message to the output stream with the class variables
-    public void writeMessage(DataOutputStream out, MessageRecordLayer messageObject) {
+    private void writeMessage(DataOutputStream out, MessageRecordLayer messageObject) {
         try {
             byte contentType = messageObject.getContentTypeByte();
             byte majorVersion = messageObject.getMajorVersion();
@@ -37,7 +59,8 @@ public class ReadWriteRecordLayer {
             if (messageObject.getLengthShort() != 0) {
                 out.write(content);
             }
-            System.out.println("Write Type: " + messageObject.getContentType()+ ", " + messageObject.getLengthShort() + ", " + messageObject.getContent());
+            ContentType contentType2 = messageObject.getContentType();
+            System.out.println("Write Type: " + messageObject.getContentType() + ", " + messageObject.getLengthShort() + ", " + contentType2);
         } catch (IOException ex) {
             Logger.getLogger(ReadWriteRecordLayer.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -57,8 +80,7 @@ public class ReadWriteRecordLayer {
             in.read(lengthBytes, 0, 2);
             // get the length as a short
             short lengthShort = ByteBuffer.wrap(lengthBytes).getShort();
-            
-            
+
             // set the content array to the byte length and read the values
             byte messageContent[] = new byte[lengthShort];
             if (lengthShort != 0) {
@@ -67,9 +89,9 @@ public class ReadWriteRecordLayer {
             } else {
                 messageObject = new MessageRecordLayer(contentyType, null);
             }
-
+            ContentType contentType2 = messageObject.getContentType();
             // set the class variables
-            System.out.println("Read Type: " + messageObject.getContentType() + ", " + messageObject.getLengthShort() + ", " + messageObject.getContent());
+            System.out.println("Read Type: " + messageObject.getContentType() + ", " + messageObject.getLengthShort() + ", " + contentType2);
             return messageObject;
         } catch (IOException ex) {
             Logger.getLogger(ReadWriteRecordLayer.class.getName()).log(Level.SEVERE, null, ex);
