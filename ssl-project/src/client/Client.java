@@ -206,7 +206,7 @@ public class Client {
 
             // RECORD LAYER
             System.out.println("\nRECORD LAYER");
-
+            System.out.println("Type '/end' to end chat");
             // begin one way chat
             chat(in, out, masterSecret);
 
@@ -225,6 +225,9 @@ public class Client {
         while (input.hasNextLine()) {
             String message = input.nextLine();
             rWRecordLayer.writeApplicationBytes(out, des.encrypt(message).getBytes());
+            if (message.equals("/end")){
+                break;
+            }
         }
     }
 

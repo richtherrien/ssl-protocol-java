@@ -228,6 +228,9 @@ public class ServerRunnable implements Runnable {
                 if (in.available() != 0) {
                     MessageRecordLayer messageRecord = rWRecordLayer.readMessage(in);
                     System.out.println("Received Message: " + des.decrypt(new String(messageRecord.getContent(), StandardCharsets.UTF_8)));
+                    if (des.decrypt(new String(messageRecord.getContent(), StandardCharsets.UTF_8)).equals("/end")){
+                        break;
+                    }
                 }
             } catch (IOException ex) {
                 Logger.getLogger(ServerRunnable.class.getName()).log(Level.SEVERE, null, ex);
