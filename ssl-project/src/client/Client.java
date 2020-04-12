@@ -15,7 +15,6 @@ import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
-import java.security.PublicKey;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -23,6 +22,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import models.handshake.*;
 import utils.ReadWriteHelper;
+import utils.ReadWriteRecordLayer;
 import utils.X509CertificateManager;
 
 /**
@@ -54,19 +54,25 @@ public class Client {
 
             //// PHASE 1 not implemented
             System.out.println("\nBeginning Phase 1");
-            
+
             // create Cipher Suite and 
             ArrayList<String> keyEx = new ArrayList<>(), cipherAlg = new ArrayList<>(), macAlg = new ArrayList<>();
-            
+
             // add Algorithms to Cipher Suite in decreasing order of preferance
-            keyEx.add("RSA");     keyEx.add("DH");
-            cipherAlg.add("DES"); cipherAlg.add("RC4"); cipherAlg.add("RC2"); cipherAlg.add("3DES"); cipherAlg.add("IDEA");
-            macAlg.add("MD5");    macAlg.add("SHA-1");
-            
+            keyEx.add("RSA");
+            keyEx.add("DH");
+            cipherAlg.add("DES");
+            cipherAlg.add("RC4");
+            cipherAlg.add("RC2");
+            cipherAlg.add("3DES");
+            cipherAlg.add("IDEA");
+            macAlg.add("MD5");
+            macAlg.add("SHA-1");
+
             // send client hello, then receive server_hello 
             ClientHello cHello = new ClientHello(in, out, keyEx, cipherAlg, macAlg);
             cHello.init();
-            
+
             //Dubugging information
             System.out.println("\nSSL Version = " + cHello.getSSLVersion());
             System.out.println("Nonce Client = " + Arrays.toString(cHello.getRandom()));
@@ -74,7 +80,7 @@ public class Client {
             System.out.println("\nKey Exchange Algorithm = " + cHello.getPreferredKeyExchange());
             System.out.println("Cipher Algorithm = " + cHello.getPreferredCipherAlg());
             System.out.println("MAC Algorithm = " + cHello.getPreferredMACAlg());
-            
+
             /// PHASE 2
             System.out.println("\nBeginning Phase 2");
             boolean serverDone = false;
@@ -128,7 +134,7 @@ public class Client {
             ClientKeyExchange clientKeyExchange = new ClientKeyExchange();
             byte[] preMasterSecret = clientKeyExchange.generatePremasterSecret();
             clientKeyExchange.setParameters(preMasterSecret);
-             System.out.println("Premaster secret: "+ new String(preMasterSecret, StandardCharsets.UTF_8));
+            System.out.println("Premaster secret: " + new String(preMasterSecret, StandardCharsets.UTF_8));
             byte[] keyExchangeBytes = rWHelper.serializeObject(clientKeyExchange);
             messageObject = new Message(MessageType.client_key_exchange, keyExchangeBytes);
             rWHelper.writeMessage(out, messageObject);
@@ -168,6 +174,14 @@ public class Client {
                 Finished clientFinished = (Finished) rWHelper.deserialize(messageObject.getContent());
                 System.out.println("Recieved Finished");
             }
+
+            // RECORD LAYER
+            System.out.println("\nRECORD LAYER");
+            ReadWriteRecordLayer rWRecordLayer = new ReadWriteRecordLayer();
+            String mData = "Here is some application data";
+            System.out.println("Write Message: " + mData);
+
+            rWRecordLayer.writeApplicationBytes(out, mData.getBytes());
 
             socket.close();
         } catch (IOException ex) {

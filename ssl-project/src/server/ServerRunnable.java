@@ -21,6 +21,8 @@ import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import models.handshake.*;
+import models.recordprotocol.MessageRecordLayer;
+import utils.ReadWriteRecordLayer;
 
 /**
  *
@@ -50,22 +52,28 @@ public class ServerRunnable implements Runnable {
                     new BufferedInputStream(socket.getInputStream()));
             DataOutputStream out = new DataOutputStream(socket.getOutputStream());
             ReadWriteHelper rWHelper = new ReadWriteHelper();
-            
+
             /// PHASE 1
             System.out.println("\nBeginning Phase 1");
-            
+
             // create Cipher Suite and 
             ArrayList<String> keyEx = new ArrayList<>(), cipherAlg = new ArrayList<>(), macAlg = new ArrayList<>();
-            
+
             // add Algorithms to Cipher Suite in decreasing order of preferance
-            keyEx.add("RSA");     keyEx.add("DH");
-            cipherAlg.add("DES"); cipherAlg.add("RC4"); cipherAlg.add("RC2"); cipherAlg.add("3DES"); cipherAlg.add("IDEA");
-            macAlg.add("MD5");    macAlg.add("SHA-1");
-            
+            keyEx.add("RSA");
+            keyEx.add("DH");
+            cipherAlg.add("DES");
+            cipherAlg.add("RC4");
+            cipherAlg.add("RC2");
+            cipherAlg.add("3DES");
+            cipherAlg.add("IDEA");
+            macAlg.add("MD5");
+            macAlg.add("SHA-1");
+
             // receive client hello, then send server_hello
             ServerHello sHello = new ServerHello(in, out, keyEx, cipherAlg, macAlg);
             sHello.init();
-            
+
             // Debugging Information
             System.out.println("\nSSL Version = " + sHello.getSSLVersion());
             System.out.println("Nonce Client = " + Arrays.toString(sHello.getRandomFromClient()));
@@ -73,7 +81,7 @@ public class ServerRunnable implements Runnable {
             System.out.println("\nKey Exchange Algorithm = " + sHello.getPreferredKeyExchange());
             System.out.println("Cipher Algorithm = " + sHello.getPreferredCipherAlg());
             System.out.println("MAC Algorithm = " + sHello.getPreferredMACAlg());
-            
+
             //// PHASE 2
             // SENDING CERTIFICATE
             System.out.println("\nBeginning Phase 2");
@@ -128,7 +136,7 @@ public class ServerRunnable implements Runnable {
                     case 8:
                         // client_key_exhcnage
                         this.clientKeyExchange = (ClientKeyExchange) rWHelper.deserialize(messageObject.getContent());
-                        System.out.println("Client Key Exchange. Premaster secret: "+  new String(this.clientKeyExchange.getParameters(), StandardCharsets.UTF_8));
+                        System.out.println("Client Key Exchange. Premaster secret: " + new String(this.clientKeyExchange.getParameters(), StandardCharsets.UTF_8));
                         break;
                     case 9:
                         // server_done 
@@ -154,13 +162,18 @@ public class ServerRunnable implements Runnable {
             rWHelper.writeMessage(out, messageObject);
             System.out.println("Sent Finished");
 
+            // RECORD LAYER
+            System.out.println("\nRECORD LAYER");
+            ReadWriteRecordLayer rWRecordLayer = new ReadWriteRecordLayer();
+            MessageRecordLayer messageRecord = rWRecordLayer.readMessage(in);
+            System.out.println("Received Message: " + new String(messageRecord.getContent(), StandardCharsets.UTF_8));
         } catch (IOException ex) {
             Logger.getLogger(ServerRunnable.class.getName()).log(Level.SEVERE, null, ex);
         } finally {
             try {
                 socket.close();
                 System.out.println("Closed Socket");
-            
+
             } catch (IOException ex) {
                 Logger.getLogger(ServerRunnable.class.getName()).log(Level.SEVERE, null, ex);
             }
