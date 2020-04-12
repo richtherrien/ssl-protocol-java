@@ -85,7 +85,7 @@ public class ReadWriteRecordLayer {
             os.writeObject(object);
             return out.toByteArray();
         } catch (IOException ex) {
-            Logger.getLogger(Message.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(ReadWriteRecordLayer.class.getName()).log(Level.SEVERE, null, ex);
         }
         return null;
     }
@@ -97,7 +97,7 @@ public class ReadWriteRecordLayer {
             ObjectInputStream oIn = new ObjectInputStream(bIn);
             return oIn.readObject();
         } catch (IOException | ClassNotFoundException ex) {
-            Logger.getLogger(Message.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(ReadWriteRecordLayer.class.getName()).log(Level.SEVERE, null, ex);
         }
         return null;
     }
