@@ -27,7 +27,6 @@ import utils.X509CertificateManager;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Scanner;
 import models.handshake.*;
 import models.recordprotocol.MessageRecordLayer;
 import utils.ReadWriteRecordLayer;

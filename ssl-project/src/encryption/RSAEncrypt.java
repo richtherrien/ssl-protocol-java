@@ -1,6 +1,5 @@
 package encryption;
 
-import encryption.Encrypt;
 import javax.crypto.Cipher;
 import java.security.*;
 import java.security.spec.EncodedKeySpec;
