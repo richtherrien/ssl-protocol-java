@@ -142,9 +142,7 @@ public class Client {
             System.out.println("Sent Server Client-Certificate");
 
             /**
-             * Add the parameters to the client key exchange appropriately
-             * modify the model KeyExchange to have the proper parameters
-             *
+             * Add the parameters to the client key exchange 
              */
             RSAEncrypt client = new RSAEncrypt();
             byte[] serverPublicKey = this.serverCertificate.getPublicKey().getEncoded();
